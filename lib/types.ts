@@ -1,4 +1,5 @@
 export interface StoreData {
+  appId: string;
   country: string;
   countryName: string;
   flag: string;

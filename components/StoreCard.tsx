@@ -131,7 +131,7 @@ export default function StoreCard({ data }: Props) {
 
           {/* Play Store link */}
           <a
-            href={`https://play.google.com/store/apps/details?id=${encodeURIComponent(data.title)}&gl=${data.country}&hl=${COUNTRIES_LANG[data.country] || "en"}`}
+            href={`https://play.google.com/store/apps/details?id=${data.appId}&gl=${data.country}&hl=${COUNTRIES_LANG[data.country] || "en"}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 block text-center text-xs bg-green-50 text-green-700 py-1.5 rounded-lg hover:bg-green-100 transition-colors"

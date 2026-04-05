@@ -24,6 +24,7 @@ export async function fetchStoreData(
   });
 
   return {
+    appId,
     country: countryCode.toLowerCase(),
     countryName: countryInfo?.name || countryCode,
     flag: countryInfo?.flag || "🏳️",
