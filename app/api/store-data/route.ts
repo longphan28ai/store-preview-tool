@@ -13,9 +13,10 @@ function sleep(ms: number) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { appId, countries } = body as {
+    const { appId, countries, isCompetitor } = body as {
       appId: string;
       countries: string[];
+      isCompetitor?: boolean;
     };
 
     if (!appId || !countries || !Array.isArray(countries)) {
@@ -25,13 +26,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate app exists
-    const app = APPS.find((a) => a.packageId === appId);
-    if (!app) {
-      return NextResponse.json(
-        { error: "App not found in registry" },
-        { status: 404 }
-      );
+    // Validate app exists in registry (skip for competitor apps)
+    if (!isCompetitor) {
+      const app = APPS.find((a) => a.packageId === appId);
+      if (!app) {
+        return NextResponse.json(
+          { error: "App not found in registry" },
+          { status: 404 }
+        );
+      }
     }
 
     // Cap at 20 countries per request

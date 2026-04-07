@@ -4,22 +4,42 @@ import { useState } from "react";
 import { AppEntry } from "@/data/apps";
 import { StoreData, FetchResponse } from "@/lib/types";
 import AppSelector from "@/components/AppSelector";
+import CompetitorInput from "@/components/CompetitorInput";
 import CountrySelector from "@/components/CountrySelector";
 import ViewToggle from "@/components/ViewToggle";
 import GridView from "@/components/GridView";
 import TableView from "@/components/TableView";
+import DetailView from "@/components/DetailView";
+
+type InputMode = "internal" | "competitor";
+
+interface CompetitorApp {
+  packageId: string;
+  name: string;
+}
 
 export default function Home() {
+  const [inputMode, setInputMode] = useState<InputMode>("internal");
   const [selectedApp, setSelectedApp] = useState<AppEntry | null>(null);
+  const [competitorApp, setCompetitorApp] = useState<CompetitorApp | null>(null);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [results, setResults] = useState<StoreData[]>([]);
   const [errors, setErrors] = useState<{ country: string; message: string }[]>([]);
-  const [view, setView] = useState<"grid" | "table">("grid");
+  const [view, setView] = useState<"grid" | "table" | "detail">("grid");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
 
+  const activePackageId =
+    inputMode === "internal" ? selectedApp?.packageId : competitorApp?.packageId;
+  const activeAppName =
+    inputMode === "internal"
+      ? selectedApp
+        ? `${selectedApp.productCode} — ${selectedApp.name}`
+        : null
+      : competitorApp?.name || null;
+
   const fetchData = async () => {
-    if (!selectedApp || selectedCountries.length === 0) return;
+    if (!activePackageId || selectedCountries.length === 0) return;
 
     setLoading(true);
     setResults([]);
@@ -44,8 +64,9 @@ export default function Home() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            appId: selectedApp.packageId,
+            appId: activePackageId,
             countries: batch,
+            isCompetitor: inputMode === "competitor",
           }),
         });
 
@@ -90,15 +111,43 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Mode toggle */}
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => setInputMode("internal")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                inputMode === "internal"
+                  ? "bg-blue-100 text-blue-700 ring-1 ring-blue-300"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              📱 Our Apps
+            </button>
+            <button
+              onClick={() => setInputMode("competitor")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                inputMode === "competitor"
+                  ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              🔍 Competitor
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
-            <AppSelector selected={selectedApp} onSelect={setSelectedApp} />
+            {inputMode === "internal" ? (
+              <AppSelector selected={selectedApp} onSelect={setSelectedApp} />
+            ) : (
+              <CompetitorInput onSelect={setCompetitorApp} />
+            )}
             <CountrySelector
               selected={selectedCountries}
               onChange={setSelectedCountries}
             />
             <button
               onClick={fetchData}
-              disabled={!selectedApp || selectedCountries.length === 0 || loading}
+              disabled={!activePackageId || selectedCountries.length === 0 || loading}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               {loading ? (
@@ -114,6 +163,21 @@ export default function Home() {
               )}
             </button>
           </div>
+
+          {/* Show active competitor app */}
+          {inputMode === "competitor" && competitorApp && (
+            <div className="mt-2 flex items-center gap-2 text-xs">
+              <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-md border border-orange-200">
+                🔍 {competitorApp.packageId}
+              </span>
+              <button
+                onClick={() => setCompetitorApp(null)}
+                className="text-gray-400 hover:text-red-500"
+              >
+                &times; Clear
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -128,6 +192,11 @@ export default function Home() {
                 {results.length}
               </span>{" "}
               store listings
+              {activeAppName && (
+                <span className="ml-2 text-gray-400">
+                  for {activeAppName}
+                </span>
+              )}
               {errors.length > 0 && (
                 <span className="ml-2 text-red-500">
                   ({errors.length} failed)
@@ -184,11 +253,9 @@ export default function Home() {
         )}
 
         {/* Results view */}
-        {view === "grid" ? (
-          <GridView data={results} />
-        ) : (
-          <TableView data={results} />
-        )}
+        {view === "grid" && <GridView data={results} />}
+        {view === "table" && <TableView data={results} />}
+        {view === "detail" && <DetailView data={results} />}
 
         {/* Empty state */}
         {!loading && results.length === 0 && errors.length === 0 && (
@@ -198,8 +265,8 @@ export default function Home() {
               Store Preview Tool
             </h2>
             <p className="text-gray-400 max-w-md mx-auto">
-              Select an app and choose countries above, then click Fetch to view
-              store listings across markets.
+              Select an app or paste a competitor link, choose countries, then
+              click Fetch to view store listings across markets.
             </p>
           </div>
         )}
