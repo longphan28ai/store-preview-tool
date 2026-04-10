@@ -6,6 +6,7 @@ import { StoreData, FetchResponse } from "@/lib/types";
 import AppSelector from "@/components/AppSelector";
 import CompetitorInput from "@/components/CompetitorInput";
 import CountrySelector from "@/components/CountrySelector";
+import LanguageSelector from "@/components/LanguageSelector";
 import ViewToggle from "@/components/ViewToggle";
 import GridView from "@/components/GridView";
 import TableView from "@/components/TableView";
@@ -26,6 +27,7 @@ export default function Home() {
   const [results, setResults] = useState<StoreData[]>([]);
   const [errors, setErrors] = useState<{ country: string; message: string }[]>([]);
   const [view, setView] = useState<"grid" | "table" | "detail">("grid");
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
 
@@ -67,6 +69,7 @@ export default function Home() {
             appId: activePackageId,
             countries: batch,
             isCompetitor: inputMode === "competitor",
+            ...(selectedLang && { lang: selectedLang }),
           }),
         });
 
@@ -135,7 +138,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto] gap-3 items-end">
             {inputMode === "internal" ? (
               <AppSelector selected={selectedApp} onSelect={setSelectedApp} />
             ) : (
@@ -144,6 +147,10 @@ export default function Home() {
             <CountrySelector
               selected={selectedCountries}
               onChange={setSelectedCountries}
+            />
+            <LanguageSelector
+              selected={selectedLang}
+              onChange={setSelectedLang}
             />
             <button
               onClick={fetchData}

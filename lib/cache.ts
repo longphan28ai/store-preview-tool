@@ -18,6 +18,6 @@ export function setCache(key: string, data: StoreData, ttlMs = DEFAULT_TTL) {
   cache.set(key, { data, expiresAt: Date.now() + ttlMs });
 }
 
-export function cacheKey(appId: string, country: string): string {
-  return `${appId}:${country}`;
+export function cacheKey(appId: string, country: string, lang?: string): string {
+  return lang ? `${appId}:${country}:${lang}` : `${appId}:${country}`;
 }

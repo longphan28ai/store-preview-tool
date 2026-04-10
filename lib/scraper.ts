@@ -8,18 +8,19 @@ function sleep(ms: number) {
 
 export async function fetchStoreData(
   appId: string,
-  countryCode: string
+  countryCode: string,
+  langOverride?: string
 ): Promise<StoreData> {
   const countryInfo = COUNTRIES.find(
     (c) => c.code.toLowerCase() === countryCode.toLowerCase()
   );
 
-  const lang = countryInfo?.lang || "en";
+  const lang = langOverride || countryInfo?.lang || "en";
 
   const result = await gplay.app({
     appId,
     country: countryCode.toUpperCase(),
-    lang: lang || "en",
+    lang,
     throttle: 1,
   });
 

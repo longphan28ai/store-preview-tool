@@ -13,10 +13,11 @@ function sleep(ms: number) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { appId, countries, isCompetitor } = body as {
+    const { appId, countries, isCompetitor, lang } = body as {
       appId: string;
       countries: string[];
       isCompetitor?: boolean;
+      lang?: string;
     };
 
     if (!appId || !countries || !Array.isArray(countries)) {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     for (const country of limitedCountries) {
       // Check cache first
-      const key = cacheKey(appId, country);
+      const key = cacheKey(appId, country, lang);
       const cached = getCached(key);
       if (cached) {
         results.push(cached);
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
       // Fetch from Google Play
       try {
-        const data = await fetchStoreData(appId, country);
+        const data = await fetchStoreData(appId, country, lang);
         setCache(key, data);
         results.push(data);
       } catch (error: unknown) {

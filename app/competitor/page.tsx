@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { StoreData, FetchResponse } from "@/lib/types";
 import CountrySelector from "@/components/CountrySelector";
+import LanguageSelector from "@/components/LanguageSelector";
 import ViewToggle from "@/components/ViewToggle";
 import GridView from "@/components/GridView";
 import TableView from "@/components/TableView";
@@ -23,6 +24,7 @@ export default function CompetitorPage() {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [results, setResults] = useState<StoreData[]>([]);
   const [errors, setErrors] = useState<{ country: string; message: string }[]>([]);
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "table" | "detail">("grid");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -65,6 +67,7 @@ export default function CompetitorPage() {
             appId: activePackageId,
             countries: batch,
             isCompetitor: true,
+            ...(selectedLang && { lang: selectedLang }),
           }),
         });
 
@@ -108,7 +111,7 @@ export default function CompetitorPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto] gap-3 items-end">
             {/* URL input */}
             <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -161,6 +164,10 @@ export default function CompetitorPage() {
             <CountrySelector
               selected={selectedCountries}
               onChange={setSelectedCountries}
+            />
+            <LanguageSelector
+              selected={selectedLang}
+              onChange={setSelectedLang}
             />
 
             <button
