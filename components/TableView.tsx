@@ -131,7 +131,7 @@ export default function TableView({ data }: Props) {
                     onClick={() =>
                       setExpandedDesc(expandedDesc === item.country ? null : item.country)
                     }
-                    className="text-blue-600 hover:underline mt-1"
+                    className="text-emerald-600 hover:underline mt-1"
                   >
                     {expandedDesc === item.country ? "Less" : "More"}
                   </button>

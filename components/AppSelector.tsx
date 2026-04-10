@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { APPS, AppEntry } from "@/data/apps";
+import { IconApp } from "./Icons";
 
 interface Props {
   selected: AppEntry | null;
@@ -31,24 +32,25 @@ export default function AppSelector({ selected, onSelect }: Props) {
 
   return (
     <div ref={ref} className="relative w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        📱 Select App
+      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+        <IconApp className="w-4 h-4 text-emerald-600" />
+        Select App
       </label>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
       >
         {selected ? (
           <span>
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-emerald-600">
               {selected.productCode}
             </span>{" "}
-            — {selected.name}
+            &mdash; {selected.name}
           </span>
         ) : (
           <span className="text-gray-400">Choose an app...</span>
         )}
-        <span className="float-right text-gray-400">▾</span>
+        <span className="float-right text-gray-400">&#x25BE;</span>
       </button>
 
       {open && (
@@ -59,7 +61,7 @@ export default function AppSelector({ selected, onSelect }: Props) {
               placeholder="Search by name or code..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               autoFocus
             />
           </div>
@@ -72,9 +74,9 @@ export default function AppSelector({ selected, onSelect }: Props) {
                   setOpen(false);
                   setSearch("");
                 }}
-                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors ${
+                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-emerald-50 transition-colors ${
                   selected?.packageId === app.packageId
-                    ? "bg-blue-50 text-blue-700"
+                    ? "bg-emerald-50 text-emerald-700"
                     : ""
                 }`}
               >

@@ -17,7 +17,7 @@ export default function StoreCard({ data }: Props) {
     <>
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2.5 border-b flex items-center gap-2">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2.5 border-b flex items-center gap-2">
           <span className="text-xl">{data.flag}</span>
           <span className="font-semibold text-sm text-gray-800">
             {data.countryName}
@@ -94,7 +94,7 @@ export default function StoreCard({ data }: Props) {
             {data.description.length > 150 && (
               <button
                 onClick={() => setShowFullDesc(!showFullDesc)}
-                className="text-xs text-blue-600 hover:underline mt-1"
+                className="text-xs text-emerald-600 hover:underline mt-1"
               >
                 {showFullDesc ? "Show less" : "Show more"}
               </button>

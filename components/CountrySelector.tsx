@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { COUNTRIES } from "@/data/countries";
 import { COUNTRY_GROUPS } from "@/data/country-groups";
+import { IconGlobe } from "./Icons";
 
 interface Props {
   selected: string[];
@@ -50,16 +51,17 @@ export default function CountrySelector({ selected, onChange }: Props) {
 
   return (
     <div ref={ref} className="relative w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        🌍 Select Countries
+      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+        <IconGlobe className="w-4 h-4 text-emerald-600" />
+        Select Countries
       </label>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        className="w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
       >
         {selected.length > 0 ? (
           <span>
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-emerald-600">
               {selected.length}
             </span>{" "}
             countries selected
@@ -67,7 +69,7 @@ export default function CountrySelector({ selected, onChange }: Props) {
         ) : (
           <span className="text-gray-400">Choose countries...</span>
         )}
-        <span className="float-right text-gray-400">▾</span>
+        <span className="float-right text-gray-400">&#x25BE;</span>
       </button>
 
       {/* Selected chips */}
@@ -78,10 +80,10 @@ export default function CountrySelector({ selected, onChange }: Props) {
             return (
               <span
                 key={code}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs cursor-pointer hover:bg-blue-200"
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs cursor-pointer hover:bg-emerald-200"
                 onClick={() => toggleCountry(code)}
               >
-                {country?.flag} {code.toUpperCase()} ✕
+                {country?.flag} {code.toUpperCase()} &times;
               </span>
             );
           })}
@@ -112,8 +114,8 @@ export default function CountrySelector({ selected, onChange }: Props) {
                     onClick={() => toggleGroup(group.codes)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                       allSelected
-                        ? "bg-blue-600 text-white"
-                        : "bg-white border border-gray-300 text-gray-600 hover:border-blue-400"
+                        ? "bg-emerald-600 text-white"
+                        : "bg-white border border-gray-300 text-gray-600 hover:border-emerald-400"
                     }`}
                   >
                     {group.label}
@@ -130,7 +132,7 @@ export default function CountrySelector({ selected, onChange }: Props) {
               placeholder="Search country..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               autoFocus
             />
           </div>
@@ -141,18 +143,18 @@ export default function CountrySelector({ selected, onChange }: Props) {
               <button
                 key={country.code}
                 onClick={() => toggleCountry(country.code)}
-                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-blue-50 transition-colors ${
-                  selected.includes(country.code) ? "bg-blue-50" : ""
+                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-emerald-50 transition-colors ${
+                  selected.includes(country.code) ? "bg-emerald-50" : ""
                 }`}
               >
                 <span
                   className={`w-4 h-4 rounded border flex items-center justify-center text-xs ${
                     selected.includes(country.code)
-                      ? "bg-blue-600 border-blue-600 text-white"
+                      ? "bg-emerald-600 border-emerald-600 text-white"
                       : "border-gray-300"
                   }`}
                 >
-                  {selected.includes(country.code) ? "✓" : ""}
+                  {selected.includes(country.code) ? "\u2713" : ""}
                 </span>
                 <span>{country.flag}</span>
                 <span>{country.name}</span>
@@ -169,7 +171,7 @@ export default function CountrySelector({ selected, onChange }: Props) {
               onClick={() =>
                 onChange(COUNTRIES.map((c) => c.code))
               }
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-emerald-600 hover:underline"
             >
               Select All
             </button>

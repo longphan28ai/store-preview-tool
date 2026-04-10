@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { AppEntry } from "@/data/apps";
 import { StoreData, FetchResponse } from "@/lib/types";
+import Logo from "@/components/Logo";
+import { IconApp, IconSearch } from "@/components/Icons";
 import AppSelector from "@/components/AppSelector";
 import CompetitorInput from "@/components/CompetitorInput";
 import CountrySelector from "@/components/CountrySelector";
@@ -96,20 +98,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-40">
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-              S
-            </div>
+            <Logo size={40} />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-slate-900">
                 Store Preview Tool
               </h1>
-              <p className="text-xs text-gray-500">
-                View Google Play listings across markets — Apero UA
+              <p className="text-xs text-slate-500">
+                View Google Play listings across markets &mdash; Apero UA
               </p>
             </div>
           </div>
@@ -118,23 +118,23 @@ export default function Home() {
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => setInputMode("internal")}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
                 inputMode === "internal"
-                  ? "bg-blue-100 text-blue-700 ring-1 ring-blue-300"
+                  ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
             >
-              📱 Our Apps
+              <IconApp className="w-3.5 h-3.5" /> Our Apps
             </button>
             <button
               onClick={() => setInputMode("competitor")}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
                 inputMode === "competitor"
-                  ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300"
+                  ? "bg-teal-100 text-teal-700 ring-1 ring-teal-300"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
             >
-              🔍 Competitor
+              <IconSearch className="w-3.5 h-3.5" /> Competitor
             </button>
           </div>
 
@@ -155,7 +155,7 @@ export default function Home() {
             <button
               onClick={fetchData}
               disabled={!activePackageId || selectedCountries.length === 0 || loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
+              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -174,8 +174,8 @@ export default function Home() {
           {/* Show active competitor app */}
           {inputMode === "competitor" && competitorApp && (
             <div className="mt-2 flex items-center gap-2 text-xs">
-              <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-md border border-orange-200">
-                🔍 {competitorApp.packageId}
+              <span className="bg-teal-50 text-teal-600 px-2 py-1 rounded-md border border-teal-200">
+                {competitorApp.packageId}
               </span>
               <button
                 onClick={() => setCompetitorApp(null)}
@@ -195,7 +195,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-gray-500">
               Showing{" "}
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-slate-800">
                 {results.length}
               </span>{" "}
               store listings
@@ -267,11 +267,13 @@ export default function Home() {
         {/* Empty state */}
         {!loading && results.length === 0 && errors.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🏪</div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            <div className="mb-4 flex justify-center">
+              <Logo size={64} />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-700 mb-2">
               Store Preview Tool
             </h2>
-            <p className="text-gray-400 max-w-md mx-auto">
+            <p className="text-slate-400 max-w-md mx-auto">
               Select an app or paste a competitor link, choose countries, then
               click Fetch to view store listings across markets.
             </p>

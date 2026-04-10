@@ -74,7 +74,7 @@ export default function DetailView({ data }: Props) {
                       <img
                         src={url}
                         alt={`${item.countryName} - Screenshot ${i + 1}`}
-                        className="w-full rounded-lg shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-300 transition-all"
+                        className="w-full rounded-lg shadow-sm border border-gray-100 hover:shadow-md hover:border-emerald-300 transition-all"
                       />
                       <div className="absolute top-1.5 left-1.5 bg-black/60 text-white text-[10px] font-mono px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                         SS{i + 1}

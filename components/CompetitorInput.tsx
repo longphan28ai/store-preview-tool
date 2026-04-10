@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconSearch } from "./Icons";
 
 interface CompetitorApp {
   packageId: string;
@@ -40,8 +41,9 @@ export default function CompetitorInput({ onSelect }: Props) {
 
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        🔍 Competitor Lookup
+      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+        <IconSearch className="w-4 h-4 text-emerald-600" />
+        Competitor Lookup
       </label>
       <div className="flex gap-2">
         <input
@@ -55,12 +57,12 @@ export default function CompetitorInput({ onSelect }: Props) {
             if (e.key === "Enter") handleSubmit();
           }}
           placeholder="Paste Play Store link or package ID..."
-          className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+          className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all text-sm"
         />
         <button
           onClick={handleSubmit}
           disabled={!url.trim()}
-          className="px-4 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm text-sm whitespace-nowrap"
+          className="px-4 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm text-sm whitespace-nowrap"
         >
           Use
         </button>

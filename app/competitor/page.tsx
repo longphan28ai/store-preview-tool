@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { StoreData, FetchResponse } from "@/lib/types";
+import Logo from "@/components/Logo";
+import { IconSearch } from "@/components/Icons";
 import CountrySelector from "@/components/CountrySelector";
 import LanguageSelector from "@/components/LanguageSelector";
 import ViewToggle from "@/components/ViewToggle";
@@ -93,20 +95,18 @@ export default function CompetitorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-40">
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-              C
-            </div>
+            <Logo size={40} />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-slate-900">
                 Competitor Store Viewer
               </h1>
-              <p className="text-xs text-gray-500">
-                View any Google Play listing across markets — Apero UA
+              <p className="text-xs text-slate-500">
+                View any Google Play listing across markets &mdash; Apero UA
               </p>
             </div>
           </div>
@@ -114,8 +114,9 @@ export default function CompetitorPage() {
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto] gap-3 items-end">
             {/* URL input */}
             <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                🔍 Google Play Link
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+                <IconSearch className="w-4 h-4 text-emerald-600" />
+                Google Play Link
               </label>
               <div className="flex gap-2">
                 <input
@@ -129,12 +130,12 @@ export default function CompetitorPage() {
                     if (e.key === "Enter") handleUseApp();
                   }}
                   placeholder="Paste Play Store link or package ID..."
-                  className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+                  className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all text-sm"
                 />
                 <button
                   onClick={handleUseApp}
                   disabled={!url.trim()}
-                  className="px-4 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm text-sm whitespace-nowrap"
+                  className="px-4 py-3 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm text-sm whitespace-nowrap"
                 >
                   Use
                 </button>
@@ -144,8 +145,8 @@ export default function CompetitorPage() {
               )}
               {activePackageId && (
                 <div className="mt-2 flex items-center gap-2 text-xs">
-                  <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-md border border-orange-200">
-                    📦 {activePackageId}
+                  <span className="bg-teal-50 text-teal-600 px-2 py-1 rounded-md border border-teal-200">
+                    {activePackageId}
                   </span>
                   <button
                     onClick={() => {
@@ -155,7 +156,7 @@ export default function CompetitorPage() {
                     }}
                     className="text-gray-400 hover:text-red-500"
                   >
-                    ✕ Clear
+                    &times; Clear
                   </button>
                 </div>
               )}
@@ -173,7 +174,7 @@ export default function CompetitorPage() {
             <button
               onClick={fetchData}
               disabled={!activePackageId || selectedCountries.length === 0 || loading}
-              className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
+              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -197,7 +198,7 @@ export default function CompetitorPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-gray-500">
               Showing{" "}
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-slate-800">
                 {results.length}
               </span>{" "}
               store listings
@@ -265,11 +266,13 @@ export default function CompetitorPage() {
 
         {!loading && results.length === 0 && errors.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            <div className="mb-4 flex justify-center">
+              <Logo size={64} />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-700 mb-2">
               Competitor Store Viewer
             </h2>
-            <p className="text-gray-400 max-w-md mx-auto">
+            <p className="text-slate-400 max-w-md mx-auto">
               Paste a Google Play Store link above, choose countries, then click
               Fetch to view the app listing across markets.
             </p>
