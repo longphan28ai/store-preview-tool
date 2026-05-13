@@ -1,4 +1,4 @@
-import Logo from "../../../components/Logo";
+import Logo from "../_components/Logo";
 
 export default function LoginPage() {
   return (
@@ -15,14 +15,11 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-emerald-500/5 p-8">
           <div className="flex items-center gap-2.5 mb-7">
             <Logo size={36} />
-            <div className="leading-tight">
-              <div className="text-base font-semibold tracking-tight text-slate-100">Store Preview</div>
-              <div className="text-[10px] uppercase tracking-widest text-emerald-400/80">Apero UA · v2</div>
-            </div>
+            <div className="text-lg font-semibold tracking-tight text-slate-100">ASO Studio</div>
           </div>
 
           <h1 className="text-xl font-semibold text-slate-100 mb-1">Welcome back</h1>
-          <p className="text-sm text-slate-400 mb-6">Sign in to your Apero workspace</p>
+          <p className="text-sm text-slate-400 mb-6">Sign in to ASO Studio</p>
 
           <form className="space-y-3">
             <div>
@@ -66,7 +63,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-5 text-center text-[11px] text-slate-600">
-          Internal tool · Apero User Acquisition team
+          ASO Studio · Internal tool
         </p>
       </div>
     </div>

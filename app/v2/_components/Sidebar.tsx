@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Logo from "../../../components/Logo";
+import Logo from "./Logo";
 
 function IconListings({ className = "w-4 h-4" }: { className?: string }) {
   return <svg className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4 10a6 6 0 0010.89 3.476L4.524 5.11A5.97 5.97 0 004 10zm1.11-4.89l10.366 8.366A6 6 0 005.11 5.11z" clipRule="evenodd"/></svg>;
@@ -37,10 +37,7 @@ export default function Sidebar() {
     <aside className="w-64 shrink-0 border-r border-slate-800/80 bg-slate-950/95 backdrop-blur flex flex-col">
       <div className="h-14 px-4 flex items-center gap-2.5 border-b border-slate-800/80">
         <Logo size={28} />
-        <div className="leading-tight">
-          <div className="text-sm font-semibold tracking-tight text-slate-100">Store Preview</div>
-          <div className="text-[10px] uppercase tracking-widest text-emerald-400/80">Apero UA · v2</div>
-        </div>
+        <div className="text-base font-semibold tracking-tight text-slate-100">ASO Studio</div>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-6">
