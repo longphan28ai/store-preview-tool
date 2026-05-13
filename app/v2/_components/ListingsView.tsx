@@ -1,7 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MOCK_APPS, MOCK_COUNTRIES, type MockApp } from "./mockData";
+
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const q = query.trim().toLowerCase();
+  if (!q) return <>{text}</>;
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(q);
+  if (idx < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-emerald-400/30 text-emerald-100 rounded px-0.5">{text.slice(idx, idx + q.length)}</mark>
+      {text.slice(idx + q.length)}
+    </>
+  );
+}
 
 type AuditFactor = {
   key: string;
@@ -260,6 +276,7 @@ export default function ListingsView() {
   const [diffOn, setDiffOn] = useState(true);
   const [auditOn, setAuditOn] = useState(true);
   const [showAppPicker, setShowAppPicker] = useState(false);
+  const [appQuery, setAppQuery] = useState("");
   const [countryQuery, setCountryQuery] = useState("");
 
   const app = MOCK_APPS.find((a) => a.productCode === selectedAppCode)!;
@@ -304,6 +321,29 @@ export default function ListingsView() {
     2: MOCK_COUNTRIES.filter((c) => c.tier === 2).length,
     3: MOCK_COUNTRIES.filter((c) => c.tier === 3).length,
   };
+
+  // ESC closes app picker
+  useEffect(() => {
+    if (!showAppPicker) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowAppPicker(false);
+        setAppQuery("");
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showAppPicker]);
+
+  const aq = appQuery.trim().toLowerCase();
+  const visibleApps = aq
+    ? MOCK_APPS.filter((a) =>
+        a.name.toLowerCase().includes(aq) ||
+        a.productCode.toLowerCase().includes(aq) ||
+        a.packageId.toLowerCase().includes(aq) ||
+        a.category.toLowerCase().includes(aq)
+      )
+    : MOCK_APPS;
 
   return (
     <div className="px-6 py-6 max-w-[1600px] mx-auto">
@@ -389,11 +429,19 @@ export default function ListingsView() {
       <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 mb-5">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* App picker */}
-          <div className="lg:w-[420px] shrink-0">
+          <div className="lg:w-[420px] shrink-0 relative">
             <div className="text-[11px] uppercase tracking-wider text-slate-500 font-medium mb-1.5">App</div>
             <button
-              onClick={() => setShowAppPicker((v) => !v)}
-              className="w-full h-12 px-3 rounded-lg bg-slate-950/60 border border-slate-800 hover:border-emerald-500/40 transition-colors flex items-center gap-3 text-left"
+              onClick={() => {
+                setShowAppPicker((v) => {
+                  const next = !v;
+                  if (!next) setAppQuery("");
+                  return next;
+                });
+              }}
+              className={`w-full h-12 px-3 rounded-lg bg-slate-950/60 border transition-colors flex items-center gap-3 text-left ${
+                showAppPicker ? "border-emerald-500/40" : "border-slate-800 hover:border-emerald-500/40"
+              }`}
             >
               <div className={`w-9 h-9 rounded-md bg-gradient-to-br ${app.iconBg} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
                 {app.icon}
@@ -408,24 +456,77 @@ export default function ListingsView() {
               <svg className={`w-4 h-4 text-slate-500 transition-transform ${showAppPicker ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
             </button>
             {showAppPicker && (
-              <div className="mt-2 max-h-72 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950/95 backdrop-blur p-1">
-                {MOCK_APPS.map((a) => (
-                  <button
-                    key={a.productCode}
-                    onClick={() => { setSelectedAppCode(a.productCode); setShowAppPicker(false); }}
-                    className={`w-full px-2 py-2 rounded flex items-center gap-2.5 text-left hover:bg-slate-800/60 ${
-                      a.productCode === selectedAppCode ? "bg-emerald-500/10" : ""
-                    }`}
-                  >
-                    <div className={`w-7 h-7 rounded bg-gradient-to-br ${a.iconBg} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}>
-                      {a.icon}
+              <div className="absolute z-20 left-0 right-0 mt-2 rounded-lg border border-slate-800 bg-slate-950/98 backdrop-blur shadow-2xl shadow-emerald-500/5 overflow-hidden">
+                {/* Search input */}
+                <div className="p-2 border-b border-slate-800/80 sticky top-0 bg-slate-950/98 backdrop-blur">
+                  <div className="relative">
+                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"/></svg>
+                    <input
+                      autoFocus
+                      value={appQuery}
+                      onChange={(e) => setAppQuery(e.target.value)}
+                      placeholder="Search by name, product code, package, category…"
+                      className="w-full h-9 pl-8 pr-8 rounded-md bg-slate-900/80 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/40"
+                    />
+                    {appQuery && (
+                      <button
+                        onClick={() => setAppQuery("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200"
+                      >
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5 px-0.5">
+                    <div className="text-[10px] text-slate-500">
+                      {visibleApps.length} {visibleApps.length === 1 ? "result" : "results"}
+                      {appQuery && <span className="text-slate-600"> · matching &ldquo;{appQuery}&rdquo;</span>}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-slate-100 truncate font-medium">{a.name}</div>
-                      <div className="text-[10px] text-slate-500 truncate">{a.productCode} · {a.category}</div>
+                    <div className="text-[10px] text-slate-600">
+                      <kbd className="px-1 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">ESC</kbd> close
                     </div>
-                  </button>
-                ))}
+                  </div>
+                </div>
+
+                {/* Results */}
+                <div className="max-h-80 overflow-y-auto p-1">
+                  {visibleApps.length === 0 ? (
+                    <div className="px-3 py-6 text-center">
+                      <div className="text-xs text-slate-400 mb-1">No apps match &ldquo;{appQuery}&rdquo;</div>
+                      <div className="text-[10px] text-slate-600">Try a product code (APB508), package name, or category</div>
+                    </div>
+                  ) : (
+                    visibleApps.map((a) => (
+                      <button
+                        key={a.productCode}
+                        onClick={() => { setSelectedAppCode(a.productCode); setShowAppPicker(false); setAppQuery(""); }}
+                        className={`w-full px-2 py-2 rounded flex items-center gap-2.5 text-left hover:bg-slate-800/60 transition-colors ${
+                          a.productCode === selectedAppCode ? "bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/20" : ""
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded bg-gradient-to-br ${a.iconBg} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}>
+                          {a.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 shrink-0">
+                              <HighlightMatch text={a.productCode} query={appQuery} />
+                            </span>
+                            <span className="text-xs text-slate-100 truncate font-medium">
+                              <HighlightMatch text={a.name} query={appQuery} />
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                            <HighlightMatch text={a.packageId} query={appQuery} /> · <HighlightMatch text={a.category} query={appQuery} />
+                          </div>
+                        </div>
+                        {a.productCode === selectedAppCode && (
+                          <svg className="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
