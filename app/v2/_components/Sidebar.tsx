@@ -31,14 +31,6 @@ const NAV = [
   { href: "/v2/settings", label: "Settings", icon: IconSettings },
 ];
 
-const CATEGORIES = [
-  { slug: "ai-photo", name: "AI Photo & Video", count: 9 },
-  { slug: "language", name: "Language Learning", count: 8 },
-  { slug: "chatbot", name: "AI Chatbot", count: 3 },
-  { slug: "music", name: "AI Music", count: 1 },
-  { slug: "utility", name: "Utility", count: 14 },
-];
-
 export default function Sidebar() {
   const path = usePathname();
   return (
@@ -86,29 +78,6 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <div>
-          <div className="px-2 mb-2 flex items-center justify-between">
-            <div className="text-[10px] font-medium uppercase tracking-widest text-slate-500">
-              Categories
-            </div>
-            <button className="text-slate-500 hover:text-emerald-300 transition-colors" title="New category">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
-            </button>
-          </div>
-          <div className="space-y-0.5">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/v2/categories#${c.slug}`}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-emerald-400" />
-                <span className="flex-1 truncate">{c.name}</span>
-                <span className="text-[10px] tabular-nums text-slate-500">{c.count}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
       </nav>
 
       <div className="border-t border-slate-800/80 p-3">
