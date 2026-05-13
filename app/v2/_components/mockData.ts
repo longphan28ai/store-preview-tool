@@ -27,37 +27,76 @@ export const MOCK_APPS: MockApp[] = [
 ];
 
 export type MockCountry = {
-  code: string;
+  code: string;        // ISO uppercase (display)
+  glCode: string;      // lowercase code for &gl= URL param
   name: string;
   flag: string;
   tier: 1 | 2 | 3;
+  defaultLangCode: string; // hl= param for native locale
+  defaultLangName: string;
 };
 
-// Tier 1: high ARPU, mature markets (English + major EU + East Asia)
-// Tier 2: established mid-tier markets (south EU + LATAM core + Nordics)
-// Tier 3: emerging high-volume markets (SEA + South Asia)
+// Codes verified against Apero UA reference sheet
 export const MOCK_COUNTRIES: MockCountry[] = [
   // Tier 1
-  { code: "US", name: "United States", flag: "🇺🇸", tier: 1 },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧", tier: 1 },
-  { code: "CA", name: "Canada", flag: "🇨🇦", tier: 1 },
-  { code: "AU", name: "Australia", flag: "🇦🇺", tier: 1 },
-  { code: "DE", name: "Germany", flag: "🇩🇪", tier: 1 },
-  { code: "FR", name: "France", flag: "🇫🇷", tier: 1 },
-  { code: "JP", name: "Japan", flag: "🇯🇵", tier: 1 },
-  { code: "KR", name: "South Korea", flag: "🇰🇷", tier: 1 },
+  { code: "US", glCode: "us", name: "United States", flag: "🇺🇸", tier: 1, defaultLangCode: "en", defaultLangName: "English" },
+  { code: "GB", glCode: "gb", name: "United Kingdom", flag: "🇬🇧", tier: 1, defaultLangCode: "en", defaultLangName: "English" },
+  { code: "CA", glCode: "ca", name: "Canada", flag: "🇨🇦", tier: 1, defaultLangCode: "en", defaultLangName: "English" },
+  { code: "AU", glCode: "au", name: "Australia", flag: "🇦🇺", tier: 1, defaultLangCode: "en", defaultLangName: "English" },
+  { code: "DE", glCode: "de", name: "Germany", flag: "🇩🇪", tier: 1, defaultLangCode: "de", defaultLangName: "German" },
+  { code: "FR", glCode: "fr", name: "France", flag: "🇫🇷", tier: 1, defaultLangCode: "fr", defaultLangName: "French" },
+  { code: "JP", glCode: "jp", name: "Japan", flag: "🇯🇵", tier: 1, defaultLangCode: "ja", defaultLangName: "Japanese" },
+  { code: "KR", glCode: "kr", name: "South Korea", flag: "🇰🇷", tier: 1, defaultLangCode: "ko", defaultLangName: "Korean" },
   // Tier 2
-  { code: "IT", name: "Italy", flag: "🇮🇹", tier: 2 },
-  { code: "ES", name: "Spain", flag: "🇪🇸", tier: 2 },
-  { code: "NL", name: "Netherlands", flag: "🇳🇱", tier: 2 },
-  { code: "SE", name: "Sweden", flag: "🇸🇪", tier: 2 },
-  { code: "BR", name: "Brazil", flag: "🇧🇷", tier: 2 },
-  { code: "MX", name: "Mexico", flag: "🇲🇽", tier: 2 },
-  { code: "RU", name: "Russia", flag: "🇷🇺", tier: 2 },
+  { code: "IT", glCode: "it", name: "Italy", flag: "🇮🇹", tier: 2, defaultLangCode: "it", defaultLangName: "Italian" },
+  { code: "ES", glCode: "es", name: "Spain", flag: "🇪🇸", tier: 2, defaultLangCode: "es", defaultLangName: "Spanish" },
+  { code: "NL", glCode: "nl", name: "Netherlands", flag: "🇳🇱", tier: 2, defaultLangCode: "nl", defaultLangName: "Dutch" },
+  { code: "SE", glCode: "se", name: "Sweden", flag: "🇸🇪", tier: 2, defaultLangCode: "sv", defaultLangName: "Swedish" },
+  { code: "BR", glCode: "br", name: "Brazil", flag: "🇧🇷", tier: 2, defaultLangCode: "pt", defaultLangName: "Portuguese" },
+  { code: "MX", glCode: "mx", name: "Mexico", flag: "🇲🇽", tier: 2, defaultLangCode: "es", defaultLangName: "Spanish" },
+  { code: "RU", glCode: "ru", name: "Russia", flag: "🇷🇺", tier: 2, defaultLangCode: "ru", defaultLangName: "Russian" },
   // Tier 3
-  { code: "IN", name: "India", flag: "🇮🇳", tier: 3 },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩", tier: 3 },
-  { code: "VN", name: "Vietnam", flag: "🇻🇳", tier: 3 },
-  { code: "TH", name: "Thailand", flag: "🇹🇭", tier: 3 },
-  { code: "PH", name: "Philippines", flag: "🇵🇭", tier: 3 },
+  { code: "IN", glCode: "in", name: "India", flag: "🇮🇳", tier: 3, defaultLangCode: "hi", defaultLangName: "Hindi" },
+  { code: "ID", glCode: "id", name: "Indonesia", flag: "🇮🇩", tier: 3, defaultLangCode: "id", defaultLangName: "Indonesian" },
+  { code: "VN", glCode: "vn", name: "Vietnam", flag: "🇻🇳", tier: 3, defaultLangCode: "vi", defaultLangName: "Vietnamese" },
+  { code: "TH", glCode: "th", name: "Thailand", flag: "🇹🇭", tier: 3, defaultLangCode: "th", defaultLangName: "Thai" },
+  { code: "PH", glCode: "ph", name: "Philippines", flag: "🇵🇭", tier: 3, defaultLangCode: "en", defaultLangName: "English" },
 ];
+
+export type MockLanguage = { code: string; name: string; nativeName: string };
+
+// Common languages for forced override
+export const MOCK_LANGUAGES: MockLanguage[] = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt" },
+  { code: "ja", name: "Japanese", nativeName: "日本語" },
+  { code: "ko", name: "Korean", nativeName: "한국어" },
+  { code: "zh", name: "Chinese", nativeName: "中文" },
+  { code: "de", name: "German", nativeName: "Deutsch" },
+  { code: "fr", name: "French", nativeName: "Français" },
+  { code: "es", name: "Spanish", nativeName: "Español" },
+  { code: "pt", name: "Portuguese", nativeName: "Português" },
+  { code: "it", name: "Italian", nativeName: "Italiano" },
+  { code: "ru", name: "Russian", nativeName: "Русский" },
+  { code: "ar", name: "Arabic", nativeName: "العربية" },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी" },
+  { code: "id", name: "Indonesian", nativeName: "Bahasa Indonesia" },
+  { code: "th", name: "Thai", nativeName: "ไทย" },
+  { code: "nl", name: "Dutch", nativeName: "Nederlands" },
+  { code: "sv", name: "Swedish", nativeName: "Svenska" },
+];
+
+/**
+ * Build a Google Play Store URL for a given app package.
+ * - mode "main": original URL (no locale override)
+ * - mode "custom": appends &hl=<lang>&gl=<country>
+ *
+ * If the caller wants only one of hl/gl, pass empty string for the other.
+ */
+export function buildPlayStoreUrl(packageId: string, hl?: string, gl?: string): string {
+  const base = `https://play.google.com/store/apps/details?id=${packageId}`;
+  const parts: string[] = [];
+  if (hl) parts.push(`hl=${hl}`);
+  if (gl) parts.push(`gl=${gl}`);
+  return parts.length ? `${base}&${parts.join("&")}` : base;
+}

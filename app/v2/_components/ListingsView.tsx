@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MOCK_APPS, MOCK_COUNTRIES, type MockApp } from "./mockData";
+import { MOCK_APPS, MOCK_COUNTRIES, MOCK_LANGUAGES, buildPlayStoreUrl, type MockApp } from "./mockData";
+
+type StoreMode = "main" | "custom";
+type LangStrategy = "auto" | "force";
 
 function HighlightMatch({ text, query }: { text: string; query: string }) {
   if (!query) return <>{text}</>;
@@ -278,6 +281,9 @@ export default function ListingsView() {
   const [showAppPicker, setShowAppPicker] = useState(false);
   const [appQuery, setAppQuery] = useState("");
   const [countryQuery, setCountryQuery] = useState("");
+  const [storeMode, setStoreMode] = useState<StoreMode>("custom");
+  const [langStrategy, setLangStrategy] = useState<LangStrategy>("auto");
+  const [forcedLang, setForcedLang] = useState("en");
 
   const app = MOCK_APPS.find((a) => a.productCode === selectedAppCode)!;
   const listings = buildListings(app, selectedCountries);
@@ -345,6 +351,16 @@ export default function ListingsView() {
       )
     : MOCK_APPS;
 
+  // Compute URL per country based on store mode + language strategy
+  function urlFor(country: typeof MOCK_COUNTRIES[number]): { url: string; hl: string; gl: string } {
+    if (storeMode === "main") {
+      return { url: buildPlayStoreUrl(app.packageId), hl: "", gl: "" };
+    }
+    const hl = langStrategy === "auto" ? country.defaultLangCode : forcedLang;
+    const gl = country.glCode;
+    return { url: buildPlayStoreUrl(app.packageId, hl, gl), hl, gl };
+  }
+
   return (
     <div className="px-6 py-6 max-w-[1600px] mx-auto">
       {/* Page header */}
@@ -354,6 +370,33 @@ export default function ListingsView() {
           <p className="text-sm text-slate-400 mt-0.5">Compare one app across markets · Visual-first view</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Store mode segmented control */}
+          <div className="h-9 inline-flex rounded-md border border-slate-800 bg-slate-900/60 p-0.5">
+            <button
+              onClick={() => setStoreMode("main")}
+              className={`px-3 h-8 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                storeMode === "main"
+                  ? "bg-slate-800 text-slate-100 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Open the original Play Store URL with no locale override"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg>
+              Main Store
+            </button>
+            <button
+              onClick={() => setStoreMode("custom")}
+              className={`px-3 h-8 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                storeMode === "custom"
+                  ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Add &gl= (country) and &hl= (language) params to view the localized listing"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.927-8.673a1 1 0 011.34.213l.146.193a1 1 0 01-1.553 1.26l-.146-.193a1 1 0 01.213-1.473zM10 6a1 1 0 100 2 1 1 0 000-2zm-3.927 1.327a1 1 0 011.34.213l.146.193a1 1 0 11-1.553 1.26l-.146-.193a1 1 0 01.213-1.473z" clipRule="evenodd"/></svg>
+              Custom Store
+            </button>
+          </div>
           <label className="flex items-center gap-2 px-3 h-9 rounded-md bg-slate-900/60 border border-slate-800 text-xs text-slate-300 cursor-pointer">
             <input
               type="checkbox"
@@ -613,6 +656,55 @@ export default function ListingsView() {
         </div>
       </div>
 
+      {/* Language strategy bar — only in custom store mode */}
+      {storeMode === "custom" && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/30 px-4 py-3 mb-3 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389c-.188-.196-.373-.396-.554-.6a19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487-2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.02-.037 2.99-5.983A1 1 0 0113 8zm-1.382 6h2.764L13 11.236 11.618 14z" clipRule="evenodd"/></svg>
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Language strategy</span>
+          </div>
+          <div className="inline-flex rounded-md border border-slate-800 bg-slate-950/60 p-0.5">
+            <button
+              onClick={() => setLangStrategy("auto")}
+              className={`px-2.5 h-7 rounded text-[11px] font-medium transition-colors ${
+                langStrategy === "auto" ? "bg-slate-800 text-emerald-300" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Auto (per country)
+            </button>
+            <button
+              onClick={() => setLangStrategy("force")}
+              className={`px-2.5 h-7 rounded text-[11px] font-medium transition-colors ${
+                langStrategy === "force" ? "bg-slate-800 text-emerald-300" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Force one language
+            </button>
+          </div>
+          {langStrategy === "force" && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">hl=</span>
+              <select
+                value={forcedLang}
+                onChange={(e) => setForcedLang(e.target.value)}
+                className="h-7 px-2 rounded-md bg-slate-950/60 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-emerald-500/40"
+              >
+                {MOCK_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.code} · {l.name} ({l.nativeName})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="ml-auto text-[11px] text-slate-500">
+            {langStrategy === "auto"
+              ? "Each market uses its native language. Best for QA."
+              : `All markets render in ${MOCK_LANGUAGES.find((l) => l.code === forcedLang)?.name} (hl=${forcedLang}). Useful to spot non-localized markets.`}
+          </div>
+        </div>
+      )}
+
       {/* Empty state */}
       {selectedCountries.length === 0 && (
         <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/30 p-10 text-center">
@@ -624,15 +716,34 @@ export default function ListingsView() {
 
       {/* Country rows */}
       <div className="space-y-3">
-        {listings.map((l, idx) => (
-          <ListingRow key={l.code} listing={l} prev={listings[0]} diffOn={diffOn && idx > 0} auditOn={auditOn} />
-        ))}
+        {listings.map((l, idx) => {
+          const country = MOCK_COUNTRIES.find((c) => c.code === l.code)!;
+          const link = urlFor(country);
+          return (
+            <ListingRow
+              key={l.code}
+              listing={l}
+              prev={listings[0]}
+              diffOn={diffOn && idx > 0}
+              auditOn={auditOn}
+              storeMode={storeMode}
+              link={link}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function ListingRow({ listing, prev, diffOn, auditOn }: { listing: CountryListing; prev: CountryListing; diffOn: boolean; auditOn: boolean }) {
+function ListingRow({ listing, prev, diffOn, auditOn, storeMode, link }: {
+  listing: CountryListing;
+  prev: CountryListing;
+  diffOn: boolean;
+  auditOn: boolean;
+  storeMode: StoreMode;
+  link: { url: string; hl: string; gl: string };
+}) {
   const [showDetails, setShowDetails] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
   const titleDifferent = diffOn && listing.title !== prev.title;
@@ -786,18 +897,52 @@ function ListingRow({ listing, prev, diffOn, auditOn }: { listing: CountryListin
       )}
 
       {/* Footer actions */}
-      <div className="border-t border-slate-800/60 px-4 py-2.5 flex items-center justify-between bg-slate-950/20">
-        <div className="text-[10px] text-slate-500">
-          Genre · <span className="text-slate-400">{listing.genre}</span>
+      <div className="border-t border-slate-800/60 px-4 py-2.5 flex items-center justify-between bg-slate-950/20 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="text-[10px] text-slate-500 shrink-0">
+            Genre · <span className="text-slate-400">{listing.genre}</span>
+          </div>
+          {/* URL params indicator */}
+          <div className="flex items-center gap-1 shrink-0">
+            {storeMode === "main" ? (
+              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                main store · no locale
+              </span>
+            ) : (
+              <>
+                {link.hl && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/20 font-mono">
+                    hl={link.hl}
+                  </span>
+                )}
+                {link.gl && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 ring-1 ring-inset ring-teal-500/20 font-mono">
+                    gl={link.gl}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="h-7 px-2.5 text-[11px] text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded">
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => { navigator.clipboard?.writeText(link.url); }}
+            className="h-7 px-2.5 text-[11px] text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded flex items-center gap-1"
+            title={link.url}
+          >
+            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"/></svg>
             Copy link
           </button>
-          <button className="h-7 px-2.5 text-[11px] font-medium text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 ring-1 ring-inset ring-emerald-500/20 rounded flex items-center gap-1">
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-7 px-2.5 text-[11px] font-medium text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 ring-1 ring-inset ring-emerald-500/20 rounded flex items-center gap-1"
+          >
             Open in Play Store
             <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/></svg>
-          </button>
+          </a>
         </div>
       </div>
     </div>
