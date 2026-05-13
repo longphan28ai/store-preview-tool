@@ -65,7 +65,9 @@ export const MOCK_COUNTRIES: MockCountry[] = [
 
 export type MockLanguage = { code: string; name: string; nativeName: string };
 
-// Common languages for forced override
+// Languages for &hl= override — covers all codes referenced in
+// the Apero UA language/country sheet plus a few extra Play Store
+// languages for completeness (Dutch, Swedish, Thai).
 export const MOCK_LANGUAGES: MockLanguage[] = [
   { code: "en", name: "English", nativeName: "English" },
   { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt" },
@@ -79,11 +81,16 @@ export const MOCK_LANGUAGES: MockLanguage[] = [
   { code: "it", name: "Italian", nativeName: "Italiano" },
   { code: "ru", name: "Russian", nativeName: "Русский" },
   { code: "ar", name: "Arabic", nativeName: "العربية" },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe" },
   { code: "hi", name: "Hindi", nativeName: "हिन्दी" },
   { code: "id", name: "Indonesian", nativeName: "Bahasa Indonesia" },
   { code: "th", name: "Thai", nativeName: "ไทย" },
+  { code: "bn", name: "Bengali", nativeName: "বাংলা" },
+  { code: "ur", name: "Urdu", nativeName: "اردو" },
   { code: "nl", name: "Dutch", nativeName: "Nederlands" },
   { code: "sv", name: "Swedish", nativeName: "Svenska" },
+  { code: "af", name: "Afrikaans", nativeName: "Afrikaans" },
+  { code: "hy", name: "Armenian", nativeName: "Հայերեն" },
 ];
 
 /**
