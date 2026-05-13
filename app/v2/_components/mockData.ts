@@ -26,14 +26,38 @@ export const MOCK_APPS: MockApp[] = [
   { productCode: "APB864", name: "AI Chatbot Assistant - GPT AI", packageId: "com.brct.aichatbot.assistant", category: "AI Chatbot", iconBg: "from-teal-400 to-cyan-500", icon: "CB", rating: 4.4, reviews: 92150, installs: "5M+", size: "38 MB", updated: "2d ago", countries: 20, cvr: 29.3, trend: 6.8 },
 ];
 
-export const MOCK_COUNTRIES = [
-  { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "KR", name: "South Korea", flag: "🇰🇷" },
-  { code: "DE", name: "Germany", flag: "🇩🇪" },
-  { code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "BR", name: "Brazil", flag: "🇧🇷" },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
-  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
+export type MockCountry = {
+  code: string;
+  name: string;
+  flag: string;
+  tier: 1 | 2 | 3;
+};
+
+// Tier 1: high ARPU, mature markets (English + major EU + East Asia)
+// Tier 2: established mid-tier markets (south EU + LATAM core + Nordics)
+// Tier 3: emerging high-volume markets (SEA + South Asia)
+export const MOCK_COUNTRIES: MockCountry[] = [
+  // Tier 1
+  { code: "US", name: "United States", flag: "🇺🇸", tier: 1 },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧", tier: 1 },
+  { code: "CA", name: "Canada", flag: "🇨🇦", tier: 1 },
+  { code: "AU", name: "Australia", flag: "🇦🇺", tier: 1 },
+  { code: "DE", name: "Germany", flag: "🇩🇪", tier: 1 },
+  { code: "FR", name: "France", flag: "🇫🇷", tier: 1 },
+  { code: "JP", name: "Japan", flag: "🇯🇵", tier: 1 },
+  { code: "KR", name: "South Korea", flag: "🇰🇷", tier: 1 },
+  // Tier 2
+  { code: "IT", name: "Italy", flag: "🇮🇹", tier: 2 },
+  { code: "ES", name: "Spain", flag: "🇪🇸", tier: 2 },
+  { code: "NL", name: "Netherlands", flag: "🇳🇱", tier: 2 },
+  { code: "SE", name: "Sweden", flag: "🇸🇪", tier: 2 },
+  { code: "BR", name: "Brazil", flag: "🇧🇷", tier: 2 },
+  { code: "MX", name: "Mexico", flag: "🇲🇽", tier: 2 },
+  { code: "RU", name: "Russia", flag: "🇷🇺", tier: 2 },
+  // Tier 3
+  { code: "IN", name: "India", flag: "🇮🇳", tier: 3 },
+  { code: "ID", name: "Indonesia", flag: "🇮🇩", tier: 3 },
+  { code: "VN", name: "Vietnam", flag: "🇻🇳", tier: 3 },
+  { code: "TH", name: "Thailand", flag: "🇹🇭", tier: 3 },
+  { code: "PH", name: "Philippines", flag: "🇵🇭", tier: 3 },
 ];

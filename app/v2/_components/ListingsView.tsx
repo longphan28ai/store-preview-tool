@@ -260,6 +260,7 @@ export default function ListingsView() {
   const [diffOn, setDiffOn] = useState(true);
   const [auditOn, setAuditOn] = useState(true);
   const [showAppPicker, setShowAppPicker] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
 
   const app = MOCK_APPS.find((a) => a.productCode === selectedAppCode)!;
   const listings = buildListings(app, selectedCountries);
@@ -273,6 +274,36 @@ export default function ListingsView() {
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
   }
+
+  // Smart tier toggle: if all of tier already selected, remove them; else add missing ones
+  function toggleTier(tier: 1 | 2 | 3) {
+    const tierCodes = MOCK_COUNTRIES.filter((c) => c.tier === tier).map((c) => c.code);
+    const allSelected = tierCodes.every((code) => selectedCountries.includes(code));
+    if (allSelected) {
+      setSelectedCountries((prev) => prev.filter((c) => !tierCodes.includes(c)));
+    } else {
+      setSelectedCountries((prev) => Array.from(new Set([...prev, ...tierCodes])));
+    }
+  }
+
+  const q = countryQuery.trim().toLowerCase();
+  const visibleCountries = q
+    ? MOCK_COUNTRIES.filter((c) => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
+    : MOCK_COUNTRIES;
+
+  function tierState(tier: 1 | 2 | 3): "none" | "some" | "all" {
+    const tierCodes = MOCK_COUNTRIES.filter((c) => c.tier === tier).map((c) => c.code);
+    const selectedInTier = tierCodes.filter((code) => selectedCountries.includes(code)).length;
+    if (selectedInTier === 0) return "none";
+    if (selectedInTier === tierCodes.length) return "all";
+    return "some";
+  }
+
+  const tierCounts = {
+    1: MOCK_COUNTRIES.filter((c) => c.tier === 1).length,
+    2: MOCK_COUNTRIES.filter((c) => c.tier === 2).length,
+    3: MOCK_COUNTRIES.filter((c) => c.tier === 3).length,
+  };
 
   return (
     <div className="px-6 py-6 max-w-[1600px] mx-auto">
@@ -399,36 +430,62 @@ export default function ListingsView() {
             )}
           </div>
 
-          {/* Country chips */}
+          {/* Country picker */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1.5">
               <div className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">
-                Countries · {selectedCountries.length} selected
+                Countries · <span className="text-emerald-300">{selectedCountries.length}</span> selected
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <TierPill tier={1} count={tierCounts[1]} state={tierState(1)} onClick={() => toggleTier(1)} />
+                <TierPill tier={2} count={tierCounts[2]} state={tierState(2)} onClick={() => toggleTier(2)} />
+                <TierPill tier={3} count={tierCounts[3]} state={tierState(3)} onClick={() => toggleTier(3)} />
+                <span className="text-slate-700 mx-0.5">·</span>
                 <button
                   onClick={() => setSelectedCountries(MOCK_COUNTRIES.map((c) => c.code))}
-                  className="text-[11px] text-emerald-300 hover:text-emerald-200"
+                  className="text-[11px] px-1.5 py-0.5 text-emerald-300 hover:text-emerald-200"
                 >
                   All
                 </button>
-                <span className="text-slate-700">·</span>
                 <button
                   onClick={() => setSelectedCountries([])}
-                  className="text-[11px] text-slate-400 hover:text-slate-200"
+                  className="text-[11px] px-1.5 py-0.5 text-slate-400 hover:text-slate-200"
                 >
                   Clear
                 </button>
               </div>
             </div>
+
+            {/* Search input */}
+            <div className="relative mb-2">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"/></svg>
+              <input
+                value={countryQuery}
+                onChange={(e) => setCountryQuery(e.target.value)}
+                placeholder="Search by country name or code…"
+                className="w-full h-8 pl-8 pr-8 rounded-md bg-slate-950/60 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/40"
+              />
+              {countryQuery && (
+                <button
+                  onClick={() => setCountryQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200"
+                  title="Clear search"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+                </button>
+              )}
+            </div>
+
+            {/* Chips */}
             <div className="flex flex-wrap gap-1.5">
-              {MOCK_COUNTRIES.map((c) => {
+              {visibleCountries.map((c) => {
                 const on = selectedCountries.includes(c.code);
                 return (
                   <button
                     key={c.code}
                     onClick={() => toggleCountry(c.code)}
-                    className={`h-9 px-2.5 rounded-md text-sm flex items-center gap-2 border transition-colors ${
+                    title={c.name}
+                    className={`h-8 pl-2 pr-2 rounded-md text-sm flex items-center gap-1.5 border transition-colors ${
                       on
                         ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-200"
                         : "bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
@@ -436,10 +493,20 @@ export default function ListingsView() {
                   >
                     <span className="text-base leading-none">{c.flag}</span>
                     <span className="font-mono text-[11px]">{c.code}</span>
-                    {on && <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
+                    <span className={`text-[9px] font-semibold px-1 py-px rounded leading-none ${
+                      c.tier === 1 ? "bg-emerald-500/15 text-emerald-300"
+                      : c.tier === 2 ? "bg-amber-500/15 text-amber-300"
+                      : "bg-slate-700/40 text-slate-400"
+                    }`}>
+                      T{c.tier}
+                    </span>
+                    {on && <svg className="w-3 h-3 text-emerald-400 -ml-0.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
                   </button>
                 );
               })}
+              {visibleCountries.length === 0 && (
+                <div className="text-xs text-slate-500 italic py-2">No countries match &ldquo;{countryQuery}&rdquo;</div>
+              )}
             </div>
           </div>
         </div>
@@ -633,6 +700,34 @@ function ListingRow({ listing, prev, diffOn, auditOn }: { listing: CountryListin
         </div>
       </div>
     </div>
+  );
+}
+
+function TierPill({ tier, count, state, onClick }: {
+  tier: 1 | 2 | 3;
+  count: number;
+  state: "none" | "some" | "all";
+  onClick: () => void;
+}) {
+  const tone = tier === 1
+    ? { active: "bg-emerald-500/15 text-emerald-200 ring-emerald-500/40", idle: "text-emerald-400/70 hover:text-emerald-300 ring-emerald-500/20" }
+    : tier === 2
+    ? { active: "bg-amber-500/15 text-amber-200 ring-amber-500/40", idle: "text-amber-400/70 hover:text-amber-300 ring-amber-500/20" }
+    : { active: "bg-slate-700/60 text-slate-200 ring-slate-600", idle: "text-slate-400 hover:text-slate-200 ring-slate-700" };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`h-6 px-1.5 rounded text-[10px] font-semibold tracking-wide ring-1 ring-inset flex items-center gap-1 transition-colors ${
+        state === "all" ? tone.active : tone.idle
+      }`}
+      title={`Toggle all Tier ${tier} markets`}
+    >
+      <span>T{tier}</span>
+      <span className="text-[9px] opacity-70 tabular-nums">{count}</span>
+      {state === "some" && <span className="w-1 h-1 rounded-full bg-current" />}
+      {state === "all" && <svg className="w-2.5 h-2.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
+    </button>
   );
 }
 
