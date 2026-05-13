@@ -23,6 +23,10 @@ const SS_TONES = [
   "from-cyan-400 via-sky-500 to-blue-500",
 ];
 
+type AuditFactor = { key: string; label: string; score: number; note: string };
+type AuditAction = { priority: "high" | "med" | "low"; text: string };
+type Audit = { overall: number; factors: AuditFactor[]; actions: AuditAction[] };
+
 type Listing = {
   title: string;
   shortDesc: string;
@@ -40,7 +44,62 @@ type Listing = {
   version: string;
   age: string;
   asoScore: number;
+  audit: Audit;
 };
+
+function buildAuditFor(app: MockApp, country: MockCountry, hl: string, overall: number): Audit {
+  const fallback = hl && hl !== country.defaultLangCode;
+  const base = {
+    metadata: overall + 4,
+    visuals: overall - 3,
+    quality: overall + 6,
+    loc: fallback ? Math.max(20, overall - 30) : overall + 2,
+    comp: overall - 8,
+  };
+  const clamp = (n: number) => Math.max(15, Math.min(98, n));
+
+  // Per-app flavor: photo apps stronger on visuals, chatbots on metadata
+  const cat = app.category.toLowerCase();
+  if (cat.includes("photo")) { base.visuals += 8; base.metadata -= 2; }
+  if (cat.includes("chatbot") || cat.includes("ai chat")) { base.metadata += 5; base.visuals -= 3; }
+  if (cat.includes("music")) { base.visuals += 4; base.comp += 6; }
+  if (cat.includes("language")) { base.loc += 6; base.metadata += 2; }
+
+  const factors: AuditFactor[] = [
+    { key: "metadata", label: "Metadata", score: clamp(base.metadata),
+      note: `Title ${app.name.length}/30 chars. ${cat.includes("chatbot") ? "Strong keyword density for 'AI'." : "Could add more category keywords."}` },
+    { key: "visuals", label: "Visuals", score: clamp(base.visuals),
+      note: cat.includes("photo") ? "Vivid screenshot palette. Icon stands out." : "Screenshots could use more text overlays for context." },
+    { key: "quality", label: "Quality", score: clamp(base.quality),
+      note: `Rating ${app.rating}★ · updated ${app.updated}. ${app.rating >= 4.5 ? "Above market norm." : "Below ideal threshold."}` },
+    { key: "loc", label: "Localization", score: clamp(base.loc),
+      note: fallback
+        ? `Falls back to English for ${country.code} — hl=${hl} not supported by listing.`
+        : `Native ${country.defaultLangName} render.` },
+    { key: "comp", label: "Competitive", score: clamp(base.comp),
+      note: `Category "${app.category}" has top competitors with video previews.` },
+  ];
+
+  // Build prioritized actions based on weakest factors
+  const sorted = [...factors].sort((a, b) => a.score - b.score);
+  const actions: AuditAction[] = [];
+  sorted.slice(0, 3).forEach((f, i) => {
+    const priority: "high" | "med" | "low" = i === 0 ? "high" : i === 1 ? "med" : "low";
+    if (f.key === "loc" && fallback) {
+      actions.push({ priority, text: `Add ${hl} translation for ${country.name} — currently falling back to English (CVR penalty ~30%).` });
+    } else if (f.key === "metadata") {
+      actions.push({ priority, text: `Expand title to 30 chars and add keyword "${app.category.split(" ")[0]}" in short description.` });
+    } else if (f.key === "visuals") {
+      actions.push({ priority, text: cat.includes("photo") ? "Test screenshot reorder — move 'Results' tile to slot #1." : "Add captioned screenshots demonstrating core flow." });
+    } else if (f.key === "quality") {
+      actions.push({ priority, text: `Drive rating above 4.5★ — respond to last 20 negative reviews this week.` });
+    } else if (f.key === "comp") {
+      actions.push({ priority, text: `Add 15-second promo video — top 3 competitors in ${app.category} all have one (avg +18% CVR).` });
+    }
+  });
+
+  return { overall, factors, actions };
+}
 
 function buildListingFor(app: MockApp, country: MockCountry, hl: string): Listing {
   // Deterministic mock content per (app, country, hl)
@@ -66,6 +125,7 @@ function buildListingFor(app: MockApp, country: MockCountry, hl: string): Listin
     ? `${app.name} is the most powerful tool in its category. Trusted by millions of users worldwide for ${app.category.toLowerCase()} needs.`
     : seed.long;
 
+  const finalScore = forcedFallback ? Math.max(30, seed.score - 25) : seed.score;
   return {
     title: finalTitle,
     shortDesc: finalShort,
@@ -85,7 +145,8 @@ function buildListingFor(app: MockApp, country: MockCountry, hl: string): Listin
     ads: "Yes",
     version: "2.0.4",
     age: country.code === "GB" ? "PEGI 3" : country.code === "DE" ? "USK 0" : "Everyone",
-    asoScore: forcedFallback ? Math.max(30, seed.score - 25) : seed.score,
+    asoScore: finalScore,
+    audit: buildAuditFor(app, country, hl, finalScore),
   };
 }
 
@@ -128,6 +189,7 @@ export default function CompareView() {
   const [appBCode, setAppBCode] = useState("APB864");
   const [country, setCountry] = useState("US");
   const [diffOn, setDiffOn] = useState(true);
+  const [auditOn, setAuditOn] = useState(true);
   const [storeMode, setStoreMode] = useState<StoreMode>("custom");
   const [langStrategy, setLangStrategy] = useState<LangStrategy>("auto");
   const [forcedLang, setForcedLang] = useState("en");
@@ -226,6 +288,11 @@ export default function CompareView() {
           <label className="flex items-center gap-2 px-3 h-9 rounded-md bg-slate-900/60 border border-slate-800 text-xs text-slate-300 cursor-pointer">
             <input type="checkbox" checked={diffOn} onChange={(e) => setDiffOn(e.target.checked)} className="w-3.5 h-3.5 accent-emerald-500" />
             Highlight diffs
+          </label>
+          <label className="flex items-center gap-2 px-3 h-9 rounded-md bg-slate-900/60 border border-slate-800 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" checked={auditOn} onChange={(e) => setAuditOn(e.target.checked)} className="w-3.5 h-3.5 accent-emerald-500" />
+            <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd"/></svg>
+            AI Audit
           </label>
           <button className="h-9 px-3 text-sm text-slate-300 bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-md flex items-center gap-1.5">
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/></svg>
@@ -433,10 +500,89 @@ export default function CompareView() {
         </div>
       )}
 
+      {/* AI Audit comparison bar */}
+      {auditOn && (
+        <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/[0.06] to-transparent p-4 mb-3">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd"/></svg>
+            <span className="text-[11px] uppercase tracking-wider text-emerald-300 font-medium">
+              AI ASO Audit · A vs B in {countryObj.name}
+            </span>
+            <span className="text-[10px] text-slate-500 ml-auto">Powered by Claude · claude-sonnet-4.5</span>
+          </div>
+
+          {/* Overall scores */}
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center mb-3">
+            <div className="flex items-center gap-3 justify-end">
+              <div className="text-right">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">App A</div>
+                <div className={`text-2xl font-semibold tabular-nums ${scoreColor(listingA.audit.overall).text}`}>
+                  {listingA.audit.overall}<span className="text-sm text-slate-500">/100</span>
+                </div>
+              </div>
+              <ScoreRing score={listingA.audit.overall} size={48} />
+            </div>
+            <div className="text-center">
+              {(() => {
+                const delta = listingA.audit.overall - listingB.audit.overall;
+                return (
+                  <>
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wider">Delta</div>
+                    <div className={`text-lg font-semibold tabular-nums ${delta > 0 ? "text-emerald-300" : delta < 0 ? "text-rose-300" : "text-slate-400"}`}>
+                      {delta > 0 ? "+" : ""}{delta}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            <div className="flex items-center gap-3">
+              <ScoreRing score={listingB.audit.overall} size={48} />
+              <div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">App B</div>
+                <div className={`text-2xl font-semibold tabular-nums ${scoreColor(listingB.audit.overall).text}`}>
+                  {listingB.audit.overall}<span className="text-sm text-slate-500">/100</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Per-factor head-to-head bars */}
+          <div className="space-y-1.5">
+            {listingA.audit.factors.map((fa, i) => {
+              const fb = listingB.audit.factors[i];
+              const aWins = fa.score > fb.score;
+              const bWins = fb.score > fa.score;
+              return (
+                <div key={fa.key} className="grid grid-cols-[1fr_120px_1fr] items-center gap-3">
+                  {/* A side */}
+                  <div className="flex items-center gap-2 justify-end">
+                    <span className={`text-xs tabular-nums font-semibold ${scoreColor(fa.score).text} ${aWins ? "" : "opacity-60"}`}>{fa.score}</span>
+                    <div className="h-2 w-full max-w-[200px] rounded-full bg-slate-800 overflow-hidden relative">
+                      <div className={`absolute right-0 top-0 h-full ${scoreColor(fa.score).bar} ${aWins ? "" : "opacity-50"}`} style={{ width: `${fa.score}%` }} />
+                    </div>
+                  </div>
+                  {/* Center label */}
+                  <div className="text-center">
+                    <div className="text-[11px] text-slate-300 font-medium">{fa.label}</div>
+                  </div>
+                  {/* B side */}
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-full max-w-[200px] rounded-full bg-slate-800 overflow-hidden relative">
+                      <div className={`absolute left-0 top-0 h-full ${scoreColor(fb.score).bar} ${bWins ? "" : "opacity-50"}`} style={{ width: `${fb.score}%` }} />
+                    </div>
+                    <span className={`text-xs tabular-nums font-semibold ${scoreColor(fb.score).text} ${bWins ? "" : "opacity-60"}`}>{fb.score}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Comparison cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <ComparePane app={appA} listing={listingA} other={listingB} side="a" diffOn={diffOn} storeMode={storeMode} hl={activeHl} gl={activeGl} />
-        <ComparePane app={appB} listing={listingB} other={listingA} side="b" diffOn={diffOn} storeMode={storeMode} hl={activeHl} gl={activeGl} />
+        <ComparePane app={appA} listing={listingA} other={listingB} side="a" diffOn={diffOn} auditOn={auditOn} storeMode={storeMode} hl={activeHl} gl={activeGl} />
+        <ComparePane app={appB} listing={listingB} other={listingA} side="b" diffOn={diffOn} auditOn={auditOn} storeMode={storeMode} hl={activeHl} gl={activeGl} />
       </div>
     </div>
   );
@@ -482,18 +628,20 @@ function AppPickerSlot({ label, badge, app, isOpen, onToggle }: {
   );
 }
 
-function ComparePane({ app, listing, other, side, diffOn, storeMode, hl, gl }: {
+function ComparePane({ app, listing, other, side, diffOn, auditOn, storeMode, hl, gl }: {
   app: MockApp;
   listing: Listing;
   other: Listing;
   side: "a" | "b";
   diffOn: boolean;
+  auditOn: boolean;
   storeMode: StoreMode;
   hl: string;
   gl: string;
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const [showLong, setShowLong] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
 
   const sideBadge = side === "a"
     ? { tone: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30", label: "A" }
@@ -605,6 +753,78 @@ function ComparePane({ app, listing, other, side, diffOn, storeMode, hl, gl }: {
         )}
       </div>
 
+      {/* AI Audit panel (collapsible) */}
+      {auditOn && (
+        <div className="px-4 py-3 border-b border-emerald-500/10 bg-emerald-500/[0.03]">
+          <button
+            onClick={() => setShowAudit((v) => !v)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <span className="text-[10px] uppercase tracking-wider text-emerald-300/80 font-medium flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd"/></svg>
+              AI Audit · <span className={scoreColor(listing.audit.overall).text}>{listing.audit.overall}/100</span>
+            </span>
+            <span className="text-[11px] text-slate-400 hover:text-emerald-300 flex items-center gap-1">
+              {showAudit ? "Hide" : "Show"} breakdown
+              <svg className={`w-3 h-3 transition-transform ${showAudit ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+            </span>
+          </button>
+          {showAudit && (
+            <div className="mt-3">
+              {/* Factor bars */}
+              <div className="space-y-2 mb-3">
+                {listing.audit.factors.map((f, i) => {
+                  const otherF = other.audit.factors[i];
+                  const better = f.score > otherF.score;
+                  const worse = f.score < otherF.score;
+                  return (
+                    <div key={f.key}>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                          {f.label}
+                          {better && <span className="text-[9px] text-emerald-300 bg-emerald-500/10 px-1 py-0.5 rounded ring-1 ring-inset ring-emerald-500/30">+{f.score - otherF.score} vs {side === "a" ? "B" : "A"}</span>}
+                          {worse && <span className="text-[9px] text-rose-300 bg-rose-500/10 px-1 py-0.5 rounded ring-1 ring-inset ring-rose-500/30">{f.score - otherF.score} vs {side === "a" ? "B" : "A"}</span>}
+                        </span>
+                        <span className={`text-xs font-semibold tabular-nums ${scoreColor(f.score).text}`}>{f.score}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                        <div className={`h-full ${scoreColor(f.score).bar} rounded-full`} style={{ width: `${f.score}%` }} />
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{f.note}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Top actions */}
+              <div className="border-t border-slate-800/60 pt-3">
+                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-2 flex items-center gap-1">
+                  <svg className="w-3 h-3 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/></svg>
+                  Top recommendations
+                </div>
+                <div className="space-y-1.5">
+                  {listing.audit.actions.map((a, i) => {
+                    const tone = a.priority === "high"
+                      ? { bg: "bg-rose-500/10", ring: "ring-rose-500/30", text: "text-rose-300", label: "HIGH" }
+                      : a.priority === "med"
+                      ? { bg: "bg-amber-500/10", ring: "ring-amber-500/30", text: "text-amber-300", label: "MED" }
+                      : { bg: "bg-slate-700/40", ring: "ring-slate-700", text: "text-slate-400", label: "LOW" };
+                    return (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-md bg-slate-900/60 ring-1 ring-inset ring-slate-800">
+                        <span className={`text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded ring-1 ring-inset shrink-0 mt-0.5 ${tone.bg} ${tone.ring} ${tone.text}`}>
+                          {tone.label}
+                        </span>
+                        <div className="text-[11px] text-slate-200 leading-relaxed">{a.text}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Details (collapsible) */}
       <div className="px-4 py-3 border-b border-slate-800/60">
         <button
@@ -669,6 +889,24 @@ function Detail({ label, value }: { label: string; value: string }) {
     <div>
       <div className="text-[10px] uppercase tracking-wider text-slate-500">{label}</div>
       <div className="text-slate-200 font-medium">{value}</div>
+    </div>
+  );
+}
+
+function ScoreRing({ score, size = 48 }: { score: number; size?: number }) {
+  const r = (size - 6) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - score / 100);
+  const col = scoreColor(score);
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} className="stroke-slate-800" strokeWidth="4" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} className={col.ring} strokeWidth="4" fill="none" strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
+      </svg>
+      <div className={`absolute font-semibold tabular-nums ${col.text}`} style={{ fontSize: size * 0.32 }}>
+        {score}
+      </div>
     </div>
   );
 }
