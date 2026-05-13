@@ -25,7 +25,6 @@ function IconSettings({ className = "w-4 h-4" }: { className?: string }) {
 
 const NAV = [
   { href: "/v2", label: "Listings", icon: IconListings },
-  { href: "/v2/apps", label: "App Catalog", icon: IconApps },
   { href: "/v2/compare", label: "Compare", icon: IconCompare },
   { href: "/v2/categories", label: "Categories", icon: IconCategories },
   { href: "/v2/users", label: "Users", icon: IconUsers, admin: true },
@@ -100,7 +99,7 @@ export default function Sidebar() {
             {CATEGORIES.map((c) => (
               <Link
                 key={c.slug}
-                href={`/v2/apps?category=${c.slug}`}
+                href={`/v2/categories#${c.slug}`}
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-colors"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-emerald-400" />
